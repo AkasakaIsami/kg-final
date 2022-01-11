@@ -18,15 +18,61 @@
 本节将针对上述定义的三个研究问题进行说明。
 
 \subsection{知识图谱选择}
-由于网络上开源知识图谱的选择众多且具有多样性，表现为图谱规模、图谱文件结构、知识领域以及数据结构等，因此选择合适的知识图谱用于事实与反实施语句生成是本文的第一个研究问题。
-为简化语句生成，选择的知识图谱应包含一下几个特点：
+由于开源知识图谱的选择众多且具有多样性，表现在知识领域、图谱规模、图谱文件类型以及数据结构等多个方面，因此选择合适的知识图谱用于事实与反实施语句生成是本文的第一个研究问题。
+合适的知识图谱应包含以下几个特点：
 \begin{enumerate}
-    \item 具有一定规模，
+    \item 以常识为知识领域，能够以常识为事实提供事实知识。
+    \item 具有一定规模，能够提供支撑模型训练数据量的数据。
+    \item 图谱内数据结构合理，且最好能为事实生成提供有效的额外信息。
 \end{enumerate}
 
-ConceptNet是一个免费提供的语义网络(semantic network)，旨在帮助计算机理解人们使用的词语的含义。
+针对这三个特点，本文选择ConceptNet\footnote{ConceptNet:https://conceptnet.io/}作为实验知识图谱。
+ConceptNet是一个免费提供的语义网络，同时也是一个知识图谱，旨在帮助计算机理解人们使用的词语的含义。
 ConceptNet起源于众包项目Open Mind Common Sense，该项目于1999年在麻省理工学院媒体实验室启动。
-自那以后，该项目已经发展到包括来自其他众包资源的知识、专家创造的资源和有目的的游戏
+该项目已经发展到包括来自其他众包资源的知识、专家创造的资源和有目的的游戏。
+ConceptNet5版本已经包含有2800万关系描述。
+
+相同于常规开源知识图谱，ConceptNet的原始数据集格式为CSV文件，但与此同时，ConceptNet还提供REST API 以获取 JSON-LD 格式的数据\footnote{ConceptNet web API:https://github.com/commonsense/conceptnet5/wiki/API}。
+以下代码给出了使用REST API获取以实体$example$为主语的一组三元组的数据后得到的返回结果样例，同时展示了ConceptNet的数据结构。
+
+
+\begin{lstlisting}[language=json,firstnumber=1]
+{
+    "@id": "/a/[/r/IsA/,/c/en/example/n/,/c/en/information/n/]",
+    "dataset": "/d/wordnet/3.1",
+    "end": {
+        "@id": "/c/en/information/n",
+        "label": "information",
+        "language": "en",
+        "sense_label": "n",
+        "term": "/c/en/information"
+    },
+    "license": "cc:by/4.0",
+    "rel": {
+        "@id": "/r/IsA",
+        "label": "IsA"
+    },
+    "sources": [
+        {
+            "@id": "/s/resource/wordnet/rdf/3.1",
+            "contributor": "/s/resource/wordnet/rdf/3.1"
+        }
+    ],
+    "start": {
+        "@id": "/c/en/example/n",
+        "label": "example",
+        "language": "en",
+        "sense_label": "n",
+        "term": "/c/en/example"
+    },
+    "surfaceText": "[[example]] is a type of [[information]]",
+    "weight": 2.0
+}
+\end{lstlisting}
+
+可以观察到，返回的JSON数据中除去构成三元组的包含4-10行、22-28行的实体信息以及12-15行的关系信息外，同时还提供的$surfaceText$与$weight$信息。
+一些ConceptNet的数据是从自然语言文本中提取的，$surfaceText$的值展示提取这个数据的原始文本是什么，而$weight$值显示这个信息有多可信，当信息来自更多的来源或更可靠的来源时，$weight$值会更高。
+
 
 \subsection{基于图谱的事实与反事实语句生成}
 
